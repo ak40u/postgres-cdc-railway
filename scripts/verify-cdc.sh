@@ -76,13 +76,19 @@ if [ -n "$ID" ]; then
   deadline=$(( $(date +%s) + 60 ))
   while [ "$(date +%s)" -lt "$deadline" ]; do
     events=$(api "$BASE/events?limit=50")
+    # A poll that lands mid-restart returns nothing parseable; count zero and
+    # keep waiting rather than treating it as an answer.
     hits=$(python3 -c '
 import json, sys
-data = json.loads(sys.argv[1])
+try:
+    data = json.loads(sys.argv[1])
+except Exception:
+    print(0)
+    raise SystemExit(0)
 marker = sys.argv[2]
 print(sum(1 for e in data.get("events", []) if marker in json.dumps(e)))
 ' "$events" "$MARKER")
-    [ "$hits" -ge 2 ] && { updated="yes"; break; }
+    [ "${hits:-0}" -ge 2 ] && { updated="yes"; break; }
     sleep 5
   done
   [ -n "$updated" ] && ok "the update arrived as a second event" || fail "the update arrived as a second event" "only one event in 60s"
