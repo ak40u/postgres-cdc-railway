@@ -32,7 +32,7 @@ Postgres already writes every change to its write-ahead log. Debezium reads that
 - **Postgres starts through its own entrypoint**, not by replacing the command. A start command replaces the entrypoint too, so `postgres -c wal_level=logical` runs as root and the server refuses outright: *"root execution of the PostgreSQL server is not permitted"*. Going through `docker-entrypoint.sh` keeps the switch to the unprivileged user — and the chown of the mounted volume.
 - **The receiver writes outside the watched schema.** Storing an event in a table Debezium is watching turns one change into an endless loop; here events land in `public.cdc_events` while only `app.*` is watched.
 - **The receiver answers 5xx on failure**, so Debezium retries instead of dropping the change. Delivery is at-least-once by design.
-- **Offsets are kept on a volume.** Without one, a restart re-reads from wherever the slot happens to be — duplicates at best, silence at worst.
+- **The replication slot is the authoritative position**, so a restart resumes from where Postgres says the consumer got to, at the cost of re-delivering the last few changes. Offsets are kept in the container; add a volume on `/data` to the Debezium service if you want exact resumption.
 - **`ExtractNewRecordState` is applied**, so the payload is the row plus a little metadata rather than Debezium's full before/after envelope. Easier to consume, and the operation is still there as `__op`.
 
 The repository carries `scripts/verify-cdc.sh`, whose central assertion cannot be faked from either end: write a row, then watch it arrive as a change event nobody sent — through the write-ahead log, a replication slot, Debezium and an HTTP POST. It then updates the row and waits for the second event.

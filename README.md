@@ -82,8 +82,10 @@ use `DEBEZIUM_SOURCE_TABLE_INCLUDE_LIST` for individual tables.
 - **The receiver must not write to a watched table.** Storing an event in a table
   Debezium is watching turns one change into an endless loop. Here the events go
   to `public.cdc_events` while only `app.*` is watched.
-- **Offsets live on a volume.** Without one, a restart re-reads from wherever the
-  slot happens to be and you get duplicates — or, worse, silence.
+- **Offsets are kept in the container, not on a volume.** Postgres's replication
+  slot is the authoritative position, so a restart resumes from there — at the
+  cost of re-delivering the last few changes. Add a volume on `/data` to the
+  Debezium service if you would rather it resumed exactly.
 - **Events are at-least-once.** A retry after a partial failure delivers the same
   change twice; make your endpoint idempotent.
 
