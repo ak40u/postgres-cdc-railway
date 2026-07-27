@@ -1,0 +1,28 @@
+{
+  "name": "postgres-cdc-railway",
+  "version": "1.0.0",
+  "description": "Postgres change data capture to a webhook on Railway, with Debezium Server",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "express": "^5.2.1",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.2",
+    "@types/pg": "^8.20.0",
+    "typescript": "^5.9.3"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}
